@@ -1,0 +1,18 @@
+{
+  "tamagotchi-screen": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "python3 /home/ricardom/git/tamagotchi-ai/tamagotchi_hook.py --event pre",
+        "timeout": 15
+      }
+    ],
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "python3 /home/ricardom/git/tamagotchi-ai/tamagotchi_hook.py --event post",
+        "timeout": 15
+      }
+    ]
+  }
+}

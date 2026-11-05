@@ -1,0 +1,18 @@
+[Unit]
+Description=Tamagotchi AI Remote Session for Raspberry Pi Zero 2W
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ricardom
+WorkingDirectory=/home/ricardom/git/tamagotchi-ai
+ExecStart=/home/ricardom/git/tamagotchi-ai/start_tamagotchi_ai.sh
+Restart=always
+RestartSec=10
+Environment=PATH=/home/ricardom/.local/bin:/usr/local/bin:/usr/bin:/bin
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
