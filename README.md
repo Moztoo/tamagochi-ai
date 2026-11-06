@@ -1,53 +1,85 @@
 # 🐣 Tamagotchi AI — Raspberry Pi Zero 2W + Waveshare e-Paper (2.13" V4)
 
-Transforma tu Raspberry Pi Zero 2W con pantalla Waveshare e-Ink en un **Tamagotchi AI interactivo** controlado remotamente mediante **Google Antigravity (`agy`)**.
+Transform your Raspberry Pi Zero 2W with a Waveshare e-Paper display into an **interactive AI Tamagotchi**, remotely controlled via **Google Antigravity (`agy`)**.
 
-Cada vez que le envías peticiones remotas a la Pi, la IA actualiza la pantalla física e-ink mostrando a tu pequeño Tamagotchi con sus emociones pixel art y un bocadillo de diálogo que describe lo que está pensando o haciendo en tiempo real.
-
----
-
-## 🎨 Características
-
-- **Diseño Retro Pixel Art**: Sprites de 48x48 píxeles dibujados a medida para pantallas monocromáticas e-ink:
-  - `idle`: Tranquilo, pestañeando y sonriendo.
-  - `thinking`: Mirando hacia arriba con una bombillita / idea.
-  - `working`: Con visor cyber / tecleando en una mini laptop retro.
-  - `happy`: Celebrando con corazones y estrellas (`^ _ ^`).
-  - `sleeping`: Zzz... reposo cuando termina la sesión.
-  - `alert`: Ojos grandes de sorpresa / exclamación ante advertencias.
-- **Bocadillo de Diálogo Dinámico**: Ajuste automático de texto (*word wrap*) con tipografía TrueType clara.
-- **Barra de Estado Superior**: Muestra la hora actual y la temperatura real de la CPU de la Raspberry Pi en cada refresco.
-- **Refresco Parcial Rápido**: Utiliza las capacidades de partial update del panel Waveshare 2.13" V4 (menos de 1 segundo de actualización sin parpadeos molestos).
-- **Protección contra colisiones de Hardware**: Sistema de lockfile (`/tmp/tamagotchi_epd.lock`) que evita corrupción de bus SPI si múltiples procesos invocan la pantalla al mismo tiempo.
-- **Integración con Antigravity (AGY)**:
-  - **Sesión Remota**: Conexión remota instantánea mediante `--remote-control`.
-  - **Permisos Desatendidos**: Automatización con `--dangerously-skip-permissions`.
-  - **Lifecycle Hooks**: Actualizaciones automáticas en `PreInvocation` (al recibir el prompt) y `PostInvocation` (al terminar la respuesta).
-  - **Custom Skill**: Permite a la IA cambiar su estado y texto a mitad de tareas complejas.
+Whenever you send remote requests or tasks to the Pi, the AI updates the physical e-ink screen in real time—displaying your little Tamagotchi companion with custom pixel art moods, witty commentary, and a dynamic dialogue speech bubble.
 
 ---
 
-## 📂 Estructura del Repositorio
+## 🔄 Dynamic Lifecycle Flow
+
+```
+[ IDLE Loop ] ──► [ Prompt Received ] ──► [ Running / Tools ] ──► [ Done ] ──► [ Back to IDLE ]
+(Random Coffee,   (Thinking + prompt)     (Funny work sprites     (Happy        (Resumes random
+ Gaming, Music...)                         & witty messages)       celebration)  idle activities)
+```
+
+1. **Resting & Idle (`tamagotchi_idle.py`)**:
+   - When no tasks are active, the background idle daemon gently cycles through cute random activities every ~90 seconds (sipping coffee, playing Tetris, listening to music, reading manuals, having a snack).
+2. **On Request Arrival (`PreInvocation`)**:
+   - The screen immediately transitions to **`thinking`**, displaying the user's prompt in the speech bubble.
+   - Automatically transitions to working mode while the agent prepares its plan.
+3. **While Running & Executing Tools (`PreToolUse`)**:
+   - Dynamically selects matching sprites (`working`, `coding`, `cleaning`, `searching`) with funny action messages:
+     - *"Desengrasando los bytes del sistema..."*
+     - *"Buscando gatitos en la web..."*
+     - *"Sobornando al compilador con cafeína..."*
+     - *"Puliendo los ceros y lustrando los unos..."*
+     - *"Alineando electrones en la memoria RAM..."*
+4. **On Task Completion (`PostInvocation`)**:
+   - The Tamagotchi celebrates in **`happy`** mode (*"¡Tarea completada con éxito!"*).
+   - After a 6-second celebration window, it automatically returns to **`idle`** and resumes resting animations.
+
+---
+
+## 🎨 14 Expressive Moods & Pixel Art Sprites
+
+Custom 48x48 pixel art sprites handcrafted for high-contrast monochrome e-ink screens:
+
+### ⚙️ Working & Execution
+- **`thinking`**: Looking upward with a glowing lightbulb / idea bubble.
+- **`working`**: Cyber visor engaged, typing on a retro mini laptop with spark effects.
+- **`coding`**: Matrix hacker mode with terminal prompt `>` and floating `< / >` brackets.
+- **`cleaning`**: Bandana tied on forehead, sweeping away dust and bugs with a broom.
+- **`searching`**: Detective hat and giant magnifying glass tracking cat paws and data.
+
+### ☕ Idle & Relaxing
+- **`idle`**: Cute curious blinking eyes, gentle smile, and sprouting antenna.
+- **`coffee`**: Sipping a hot steaming mug of coffee/tea with content closed eyes.
+- **`gaming`**: Intently focused on a retro handheld console (Game Boy style).
+- **`music`**: Wearing retro over-ear headphones, vibing with musical notes (♪ ♫).
+- **`reading`**: Round reading glasses, holding an open documentation manual.
+- **`snack`**: Chubby munching cheek puff, nibbling on a chocolate chip cookie.
+
+### 📢 Status & Alerts
+- **`happy`**: Celebrating with raised arms, hearts, and stars (`^ _ ^`).
+- **`sleeping`**: Deep slumber with floating zZz and drool bubble.
+- **`alert`**: Wide-eyed surprise / exclamation mark on warnings or errors.
+
+---
+
+## 📂 Repository Structure
 
 ```
 ~/git/tamagotchi-ai/
-├── start_tamagotchi_ai.sh    # Script principal para iniciar agy remoto + pantalla
-├── tamagotchi_display.py     # Controlador y renderizador del display e-ink
-├── tamagotchi_sprites.py     # Generador de sprites pixel art
-├── tamagotchi_hook.py        # Handler para los eventos de Antigravity (hooks.json)
-├── demo_tamagotchi.py        # Demo para probar todos los estados y animaciones
-├── tamagotchi.service        # Servicio systemd opcional para auto-arranque
+├── start_tamagotchi_ai.sh    # Main launcher (starts remote agy + idle daemon)
+├── tamagotchi_display.py     # Display driver, UI renderer & activity catalogs
+├── tamagotchi_sprites.py     # Pixel art generator (14 distinct states)
+├── tamagotchi_hook.py        # Antigravity lifecycle event handler (hooks.json)
+├── tamagotchi_idle.py        # Idle manager daemon & delayed transition worker
+├── demo_tamagotchi.py        # Demo script cycling through all 14 moods
+├── tamagotchi.service        # Optional systemd service for auto-start on boot
 ├── lib/
-│   └── waveshare_epd/        # Driver Waveshare e-Paper 2.13" V4
+│   └── waveshare_epd/        # Waveshare e-Paper 2.13" V4 driver library
 ├── pic/
-│   └── Font.ttc              # Tipografía TrueType
+│   └── Font.ttc              # TrueType font asset
 ├── skills/
 │   └── tamagotchi/
-│       └── SKILL.md          # Skill oficial de Antigravity
+│       └── SKILL.md          # Antigravity skill definition
 └── .agents/
-    ├── hooks.json            # Configuración de hooks de ciclo de vida
+    ├── hooks.json            # Lifecycle hooks (SessionStart, PreInvocation, PreToolUse, PostInvocation, Stop)
     ├── rules/
-    │   └── tamagotchi.md     # Regla always_on para la personalidad y uso de pantalla
+    │   └── tamagotchi.md     # Persona rule for display usage
     └── skills/
         └── tamagotchi/
             └── SKILL.md
@@ -55,62 +87,54 @@ Cada vez que le envías peticiones remotas a la Pi, la IA actualiza la pantalla 
 
 ---
 
-## 🚀 Cómo Iniciar la Sesión Remota
+## 🚀 Starting the Remote Session
 
-Para arrancar el Tamagotchi AI con conexión remota y permisos automáticos:
+To start the Tamagotchi AI with remote access, automated permissions, and background idle animations:
 
 ```bash
 cd ~/git/tamagotchi-ai
 ./start_tamagotchi_ai.sh
 ```
 
-El script se encargará de:
-1. Verificar que el daemon de control remoto de `agy` esté activo.
-2. Obtener el nombre de instancia de la Raspberry Pi (por ejemplo: `pylon-lunar-corona`).
-3. Actualizar la pantalla e-ink indicando que el Tamagotchi está en línea y listo.
-4. Levantar la sesión con:
+The script automatically:
+1. Verifies that the `agy` remote control daemon is active.
+2. Retrieves the Raspberry Pi instance name (e.g., `pylon-lunar-corona`).
+3. Updates the e-ink screen indicating the Tamagotchi is online.
+4. Starts the background idle animation daemon (`tamagotchi_idle.py`).
+5. Launches the headless remote session:
    ```bash
    agy --remote-control --dangerously-skip-permissions
    ```
-5. Al salir (`Ctrl+C`), pondrá al Tamagotchi a dormir (`sleeping`: Zzz...).
+6. On exit (`Ctrl+C`), gracefully stops the idle daemon and sets the Tamagotchi to sleep (`sleeping`: Zzz...).
 
 ---
 
-## 🌐 Conexión Remota desde tu Navegador / IDE
+## 🛠️ Manual Command-Line Usage
 
-1. Abre [https://antigravity.google.com](https://antigravity.google.com) o tu IDE Antigravity en tu máquina principal.
-2. En la lista de instancias de **Remote Control**, selecciona la instancia de tu Raspberry Pi (ej. `pylon-lunar-corona`).
-3. Envía cualquier tarea (por ejemplo: *"Escribe un script para respaldar mis archivos"*).
-4. **¡Mira tu pantalla e-ink física!**: El Tamagotchi pasará a estado `thinking` mostrando tu solicitud, luego a `working` mientras ejecuta comandos, y finalmente a `happy` al terminar.
-
----
-
-## 🛠️ Uso Manual por Línea de Comandos
-
-También puedes pintar en la pantalla directamente desde cualquier terminal o script:
+You can also trigger moods, activities, or daemon commands manually:
 
 ```bash
-# Estado pensando
-python3 ~/git/tamagotchi-ai/tamagotchi_display.py --state thinking --text "Calculando la respuesta adecuada..."
+# Random funny working action
+python3 ~/git/tamagotchi-ai/tamagotchi_display.py --random-working
 
-# Estado trabajando
-python3 ~/git/tamagotchi-ai/tamagotchi_display.py --state working --text "Compilando dependencias y tests..."
+# Random cute idle activity
+python3 ~/git/tamagotchi-ai/tamagotchi_display.py --random-idle
 
-# Estado feliz / éxito
-python3 ~/git/tamagotchi-ai/tamagotchi_display.py --state happy --text "¡Todo ha salido a la perfección!"
+# Specific state and custom message
+python3 ~/git/tamagotchi-ai/tamagotchi_display.py --state coffee --text "Tomando un cafecito a 65°C..."
 
-# Estado alerta / error
-python3 ~/git/tamagotchi-ai/tamagotchi_display.py --state alert --text "Advertencia: Error de conexión detectado."
+# Run the idle background daemon manually
+python3 ~/git/tamagotchi-ai/tamagotchi_idle.py --daemon --interval 90 &
 
-# Refresco completo (limpieza de ghosting)
+# Full refresh (clears ghosting)
 python3 ~/git/tamagotchi-ai/tamagotchi_display.py --full --state idle --text "Pantalla reinicializada."
 ```
 
 ---
 
-## 🧪 Ejecutar la Demostración
+## 🧪 Running the Demo
 
-Para ver todos los estados y emociones en secuencia sobre el display:
+To preview all 14 moods, expressions, and speech bubbles in sequence:
 
 ```bash
 python3 ~/git/tamagotchi-ai/demo_tamagotchi.py
@@ -118,9 +142,9 @@ python3 ~/git/tamagotchi-ai/demo_tamagotchi.py
 
 ---
 
-## ⚙️ Servicio de Arranque Automático (Systemd)
+## ⚙️ Auto-Start Service (Systemd)
 
-Si deseas que el Tamagotchi AI se levante automáticamente al encender la Raspberry Pi Zero 2W:
+To launch the Tamagotchi AI automatically whenever your Raspberry Pi boots:
 
 ```bash
 sudo cp ~/git/tamagotchi-ai/tamagotchi.service /etc/systemd/system/

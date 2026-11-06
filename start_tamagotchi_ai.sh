@@ -29,16 +29,24 @@ echo "==> Instancia remota: $INSTANCE_NAME"
 echo "==> Actualizando pantalla e-ink..."
 python3 "$DIR/tamagotchi_display.py" --full --state idle --text "Conectado: $INSTANCE_NAME. Listo para peticiones."
 
-# 3. Handle exit cleanly
+# 3. Start background idle animation daemon (cycles random cute moods when idle)
+echo "==> Iniciando daemon de animaciones en reposo..."
+python3 "$DIR/tamagotchi_idle.py" --daemon --interval 90 &
+IDLE_PID=$!
+
+# 4. Handle exit cleanly
 cleanup() {
     echo ""
     echo "==> Finalizando sesión..."
+    if [ -n "$IDLE_PID" ]; then
+        kill "$IDLE_PID" 2>/dev/null || true
+    fi
     python3 "$DIR/tamagotchi_display.py" --state sleeping --text "Zzz... Sesión remota en reposo."
     exit 0
 }
 trap cleanup SIGINT SIGTERM
 
-# 4. Launch agy with remote-control and dangerously-skip-permissions
+# 5. Launch agy with remote-control and dangerously-skip-permissions
 echo "==> Levantando sesión de Antigravity (agy)..."
 echo "==> Flags: --remote-control --dangerously-skip-permissions"
 echo "---------------------------------------------------------"

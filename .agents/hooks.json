@@ -1,5 +1,12 @@
 {
   "tamagotchi-screen": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python3 /home/ricardom/git/tamagotchi-ai/tamagotchi_hook.py --event session",
+        "timeout": 15
+      }
+    ],
     "PreInvocation": [
       {
         "type": "command",
@@ -7,10 +14,29 @@
         "timeout": 15
       }
     ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /home/ricardom/git/tamagotchi-ai/tamagotchi_hook.py --event tool",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
     "PostInvocation": [
       {
         "type": "command",
         "command": "python3 /home/ricardom/git/tamagotchi-ai/tamagotchi_hook.py --event post",
+        "timeout": 15
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 /home/ricardom/git/tamagotchi-ai/tamagotchi_hook.py --event stop",
         "timeout": 15
       }
     ]
